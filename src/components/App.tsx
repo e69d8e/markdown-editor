@@ -3,6 +3,7 @@ import { EditorView } from '@codemirror/view'
 import Editor from './Editor'
 import Preview, { PreviewRef } from './Preview'
 import Toolbar from './Toolbar'
+import Sidebar from './Sidebar'
 import { useMarkdown } from '../hooks/useMarkdown'
 import '../styles/App.css'
 
@@ -14,9 +15,13 @@ export default function App() {
     setContent,
     html,
     filePath,
+    folderPath,
+    setFolderPath,
     stats,
     handleNewFile,
     handleOpenFile,
+    handleOpenFolder,
+    openFileByPath,
     handleSaveFile,
     handleSaveAs
   } = useMarkdown()
@@ -24,12 +29,31 @@ export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('split')
   const [splitRatio, setSplitRatio] = useState(0.5)
   const [isDragging, setIsDragging] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const editorRef = useRef<EditorView | null>(null)
   const previewRef = useRef<PreviewRef | null>(null)
   const activePane = useRef<'editor' | 'preview' | null>(null)
   const layoutRef = useRef<HTMLDivElement>(null)
   const scrollDebounceRef = useRef(false)
+
+  // 当打开文件夹时自动显示侧边栏
+  useEffect(() => {
+    if (folderPath) {
+      setSidebarOpen(true)
+    }
+  }, [folderPath])
+
+  // 切换侧边栏
+  const handleToggleSidebar = useCallback(() => {
+    setSidebarOpen(prev => !prev)
+  }, [])
+
+  // 关闭侧边栏
+  const handleCloseSidebar = useCallback(() => {
+    setSidebarOpen(false)
+    setFolderPath(null)
+  }, [setFolderPath])
 
   // 编辑器滚动同步到预览（带防抖避免反馈环路）
   const handleEditorScroll = useCallback((scrollRatio: number) => {
@@ -140,12 +164,26 @@ export default function App() {
         editorRef={editorRef}
         onNew={handleNewFile}
         onOpen={handleOpenFile}
+        onOpenFolder={handleOpenFolder}
         onSave={handleSaveFile}
         onSaveAs={handleSaveAs}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={handleToggleSidebar}
       />
       <div className={`editor-layout ${isDragging ? 'resizing' : ''}`} ref={layoutRef}>
+        {sidebarOpen && (
+          <>
+            <Sidebar
+              rootPath={folderPath}
+              onFileOpen={openFileByPath}
+              currentFilePath={filePath}
+              onClose={handleCloseSidebar}
+            />
+            <div className="sidebar-divider" />
+          </>
+        )}
         {renderEditor()}
         {renderPreview()}
       </div>

@@ -8,10 +8,13 @@ interface ToolbarProps {
   editorRef: React.MutableRefObject<EditorView | null>
   onNew: () => void
   onOpen: () => void
+  onOpenFolder: () => void
   onSave: () => void
   onSaveAs: () => void
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
+  sidebarOpen: boolean
+  onToggleSidebar: () => void
 }
 
 export default function Toolbar({
@@ -20,10 +23,13 @@ export default function Toolbar({
   editorRef,
   onNew,
   onOpen,
+  onOpenFolder,
   onSave,
   onSaveAs,
   viewMode,
-  onViewModeChange
+  onViewModeChange,
+  sidebarOpen,
+  onToggleSidebar
 }: ToolbarProps) {
   const insertMarkdown = (before: string, after: string) => {
     const view = editorRef.current
@@ -81,6 +87,13 @@ export default function Toolbar({
         <button onClick={onOpen} onMouseDown={(e) => e.preventDefault()} title={`打开 (${modKey}+O)`}>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
+        </button>
+        <button onClick={onOpenFolder} onMouseDown={(e) => e.preventDefault()} title={`打开文件夹 (${modKey}+Shift+O)`}>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            <line x1="12" y1="11" x2="12" y2="17" />
+            <line x1="9" y1="14" x2="15" y2="14" />
           </svg>
         </button>
         <button onClick={onSave} onMouseDown={(e) => e.preventDefault()} title={`保存 (${modKey}+S)`}>
@@ -164,6 +177,23 @@ export default function Toolbar({
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="16 18 22 12 16 6" />
             <polyline points="8 6 2 12 8 18" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="toolbar-separator" />
+
+      {/* 侧边栏切换 */}
+      <div className="toolbar-group">
+        <button
+          className={`view-mode-btn ${sidebarOpen ? 'active' : ''}`}
+          onClick={onToggleSidebar}
+          onMouseDown={(e) => e.preventDefault()}
+          title="切换侧边栏"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <line x1="9" y1="3" x2="9" y2="21" />
           </svg>
         </button>
       </div>

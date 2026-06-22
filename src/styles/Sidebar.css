@@ -1,0 +1,164 @@
+.sidebar {
+  width: 240px;
+  min-width: 200px;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-light);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light);
+  min-height: 40px;
+}
+
+.sidebar-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  margin-right: 8px;
+}
+
+.sidebar-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border-radius: 3px;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.sidebar-close:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-tree {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 0;
+}
+
+.tree-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  cursor: default;
+  user-select: none;
+  white-space: nowrap;
+  min-height: 28px;
+}
+
+.tree-folder {
+  cursor: pointer;
+}
+
+.tree-folder:hover {
+  background: var(--bg-hover);
+}
+
+.tree-file.clickable {
+  cursor: pointer;
+}
+
+.tree-file.clickable:hover {
+  background: var(--bg-hover);
+}
+
+.tree-file.active {
+  background: var(--accent);
+  color: white;
+}
+
+.tree-file.active .tree-icon {
+  color: white;
+}
+
+.tree-file.disabled {
+  opacity: 0.45;
+}
+
+.tree-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  transition: transform 0.15s ease;
+}
+
+.tree-arrow.expanded {
+  transform: rotate(90deg);
+}
+
+.tree-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.folder-icon {
+  color: var(--accent);
+}
+
+.tree-file.active .folder-icon {
+  color: white;
+}
+
+.file-icon svg {
+  opacity: 0.8;
+}
+
+.tree-name {
+  font-size: 13px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree-file.active .tree-name {
+  color: white;
+  font-weight: 500;
+}
+
+.tree-children {
+  /* 子目录不需要额外样式，缩进由 paddingLeft 控制 */
+}
+
+/* 侧边栏与编辑器之间的分隔条 */
+.sidebar-divider {
+  width: 3px;
+  background: var(--border-main);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-divider:hover {
+  background: var(--accent);
+}

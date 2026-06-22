@@ -2,14 +2,24 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 
+export interface FileEntry {
+  name: string
+  path: string
+  isDirectory: boolean
+}
+
 declare global {
   interface Window {
     electronAPI: {
       openFile: () => Promise<{ filePath: string; content: string } | null>
+      openFolder: () => Promise<string | null>
       saveFile: (content: string, filePath?: string) => Promise<string | null>
       getInitialFile: () => Promise<{ filePath: string; content: string } | null>
+      readDirectory: (dirPath: string) => Promise<FileEntry[]>
+      readFileContent: (filePath: string) => Promise<{ filePath: string; content: string } | null>
       onNewFile: (callback: () => void) => () => void
       onFileOpened: (callback: (data: { filePath: string; content: string }) => void) => () => void
+      onFolderOpened: (callback: (folderPath: string) => void) => () => void
       onSaveFile: (callback: () => void) => () => void
       onSaveAs: (callback: () => void) => () => void
       removeAllListeners: (channel: string) => void
@@ -53,6 +63,7 @@ md.renderer.rules.fence = function (tokens, idx, options, env, self) {
 export function useMarkdown() {
   const [content, setContent] = useState<string>('# Hello Markdown\n\n开始编辑你的文档...')
   const [filePath, setFilePath] = useState<string | null>(null)
+  const [folderPath, setFolderPath] = useState<string | null>(null)
   const [html, setHtml] = useState<string>('')
 
   // 使用 ref 保存最新的 content 和 filePath，避免回调闭包过期
@@ -95,6 +106,23 @@ export function useMarkdown() {
     }
   }, [])
 
+  // 打开文件夹
+  const handleOpenFolder = useCallback(async () => {
+    const result = await window.electronAPI.openFolder()
+    if (result) {
+      setFolderPath(result)
+    }
+  }, [])
+
+  // 通过路径打开文件（侧边栏点击）
+  const openFileByPath = useCallback(async (path: string) => {
+    const result = await window.electronAPI.readFileContent(path)
+    if (result) {
+      setContent(result.content)
+      setFilePath(result.filePath)
+    }
+  }, [])
+
   // 保存文件（使用 ref 确保始终读取最新值）
   const handleSaveFile = useCallback(async () => {
     const currentContent = contentRef.current
@@ -119,12 +147,14 @@ export function useMarkdown() {
 
   const handleNewFileRef = useRef(handleNewFile)
   const handleOpenFileRef = useRef(handleOpenFile)
+  const handleOpenFolderRef = useRef(handleOpenFolder)
   const handleSaveFileRef = useRef(handleSaveFile)
   const handleSaveAsRef = useRef(handleSaveAs)
 
   useEffect(() => {
     handleNewFileRef.current = handleNewFile
     handleOpenFileRef.current = handleOpenFile
+    handleOpenFolderRef.current = handleOpenFolder
     handleSaveFileRef.current = handleSaveFile
     handleSaveAsRef.current = handleSaveAs
   })
@@ -146,12 +176,16 @@ export function useMarkdown() {
       setContent(data.content)
       setFilePath(data.filePath)
     })
+    const disposeFolderOpened = window.electronAPI.onFolderOpened((folderPath) => {
+      setFolderPath(folderPath)
+    })
     const disposeSaveFile = window.electronAPI.onSaveFile(() => handleSaveFileRef.current())
     const disposeSaveAs = window.electronAPI.onSaveAs(() => handleSaveAsRef.current())
 
     return () => {
       disposeNewFile()
       disposeFileOpened()
+      disposeFolderOpened()
       disposeSaveFile()
       disposeSaveAs()
     }
@@ -176,9 +210,13 @@ export function useMarkdown() {
     setContent,
     html,
     filePath,
+    folderPath,
+    setFolderPath,
     stats,
     handleNewFile,
     handleOpenFile,
+    handleOpenFolder,
+    openFileByPath,
     handleSaveFile,
     handleSaveAs
   }

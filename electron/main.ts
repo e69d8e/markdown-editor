@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
 import { join, isAbsolute, resolve } from 'path'
-import { readFile, writeFile, stat } from 'fs/promises'
+import { readFile, writeFile, stat, readdir } from 'fs/promises'
 
 const isDev = !app.isPackaged
 
@@ -82,6 +82,11 @@ function createMenu() {
           click: () => handleOpenFile()
         },
         {
+          label: '打开文件夹',
+          accelerator: 'CmdOrCtrl+Shift+O',
+          click: () => handleOpenFolder()
+        },
+        {
           label: '保存',
           accelerator: 'CmdOrCtrl+S',
           click: () => mainWindow?.webContents.send('menu-save-file')
@@ -159,6 +164,19 @@ async function handleOpenFile() {
   }
 }
 
+async function handleOpenFolder() {
+  if (!mainWindow) return
+
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory']
+  })
+
+  if (!result.canceled && result.filePaths.length > 0) {
+    const folderPath = result.filePaths[0]
+    mainWindow.webContents.send('folder-opened', folderPath)
+  }
+}
+
 // IPC 处理
 ipcMain.handle('dialog-open-file', async () => {
   if (!mainWindow) return null
@@ -178,6 +196,50 @@ ipcMain.handle('dialog-open-file', async () => {
     return { filePath, content }
   }
   return null
+})
+
+ipcMain.handle('dialog-open-folder', async () => {
+  if (!mainWindow) return null
+
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory']
+  })
+
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0]
+  }
+  return null
+})
+
+ipcMain.handle('read-directory', async (_, dirPath: string) => {
+  try {
+    const entries = await readdir(dirPath, { withFileTypes: true })
+    const result = entries
+      .filter(e => !e.name.startsWith('.'))
+      .map(e => ({
+        name: e.name,
+        path: join(dirPath, e.name),
+        isDirectory: e.isDirectory()
+      }))
+      .sort((a, b) => {
+        if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
+        return a.name.localeCompare(b.name)
+      })
+    return result
+  } catch (error) {
+    console.error(`Failed to read directory: ${dirPath}`, error)
+    return []
+  }
+})
+
+ipcMain.handle('read-file-content', async (_, filePath: string) => {
+  try {
+    const content = await readFile(filePath, 'utf-8')
+    return { filePath, content }
+  } catch (error) {
+    console.error(`Failed to read file: ${filePath}`, error)
+    return null
+  }
 })
 
 ipcMain.handle('dialog-save-file', async (_, { content, filePath }) => {

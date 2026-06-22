@@ -31,13 +31,11 @@
 .markdown-body h1 {
   font-size: 2.1em;
   padding-bottom: 0.3em;
-  border-bottom: 2px solid var(--border-light);
 }
 
 .markdown-body h2 {
   font-size: 1.6em;
   padding-bottom: 0.3em;
-  border-bottom: 1px solid var(--border-light);
 }
 
 .markdown-body h3 {

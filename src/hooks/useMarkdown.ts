@@ -7,6 +7,7 @@ declare global {
     electronAPI: {
       openFile: () => Promise<{ filePath: string; content: string } | null>
       saveFile: (content: string, filePath?: string) => Promise<string | null>
+      getInitialFile: () => Promise<{ filePath: string; content: string } | null>
       onNewFile: (callback: () => void) => () => void
       onFileOpened: (callback: (data: { filePath: string; content: string }) => void) => () => void
       onSaveFile: (callback: () => void) => () => void
@@ -64,6 +65,20 @@ export function useMarkdown() {
   useEffect(() => {
     setHtml(md.render(content))
   }, [content])
+
+  // 启动时加载初始文件
+  useEffect(() => {
+    const loadInitialFile = async () => {
+      if (window.electronAPI && window.electronAPI.getInitialFile) {
+        const result = await window.electronAPI.getInitialFile()
+        if (result) {
+          setContent(result.content)
+          setFilePath(result.filePath)
+        }
+      }
+    }
+    loadInitialFile()
+  }, [])
 
   // 新建文件
   const handleNewFile = useCallback(() => {

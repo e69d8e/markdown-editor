@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 export interface ElectronAPI {
   openFile: () => Promise<{ filePath: string; content: string } | null>
   saveFile: (content: string, filePath?: string) => Promise<string | null>
+  getInitialFile: () => Promise<{ filePath: string; content: string } | null>
   onNewFile: (callback: () => void) => () => void
   onFileOpened: (callback: (data: { filePath: string; content: string }) => void) => () => void
   onSaveFile: (callback: () => void) => () => void
@@ -14,6 +15,7 @@ const electronAPI: ElectronAPI = {
   openFile: () => ipcRenderer.invoke('dialog-open-file'),
   saveFile: (content: string, filePath?: string) =>
     ipcRenderer.invoke('dialog-save-file', { content, filePath }),
+  getInitialFile: () => ipcRenderer.invoke('get-initial-file'),
   onNewFile: (callback) => {
     const handler = () => callback()
     ipcRenderer.on('menu-new-file', handler)

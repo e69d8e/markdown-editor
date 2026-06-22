@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
-import { join } from 'path'
-import { readFile, writeFile } from 'fs/promises'
+import { join, isAbsolute, resolve } from 'path'
+import { readFile, writeFile, stat } from 'fs/promises'
 
 const isDev = !app.isPackaged
 
@@ -202,7 +202,93 @@ ipcMain.handle('dialog-save-file', async (_, { content, filePath }) => {
   return null
 })
 
-app.whenReady().then(createWindow)
+ipcMain.handle('get-initial-file', async () => {
+  if (fileToOpen) {
+    try {
+      const content = await readFile(fileToOpen, 'utf-8')
+      const filePath = fileToOpen
+      fileToOpen = null
+      return { filePath, content }
+    } catch (error) {
+      console.error(`Failed to read initial file: ${fileToOpen}`, error)
+      fileToOpen = null
+    }
+  }
+  return null
+})
+
+let fileToOpen: string | null = null
+
+async function getFilePathFromArgs(args: string[], workingDir?: string): Promise<string | null> {
+  for (let i = 1; i < args.length; i++) {
+    const arg = args[i]
+    if (arg.startsWith('-')) continue
+    if (arg === '.' || arg === 'dev' || arg === 'build' || arg === 'preview') continue
+
+    const hasValidExt = /\.(md|markdown|txt)$/i.test(arg)
+
+    try {
+      const fullPath = isAbsolute(arg) ? arg : (workingDir ? resolve(workingDir, arg) : resolve(arg))
+      const fileStat = await stat(fullPath)
+      if (fileStat.isFile()) {
+        return fullPath
+      }
+    } catch (_) {
+      if (hasValidExt) {
+        return isAbsolute(arg) ? arg : (workingDir ? resolve(workingDir, arg) : resolve(arg))
+      }
+    }
+  }
+  return null
+}
+
+async function openFile(filePath: string) {
+  try {
+    const content = await readFile(filePath, 'utf-8')
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('file-opened', { filePath, content })
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+    }
+  } catch (error) {
+    console.error(`Failed to open file: ${filePath}`, error)
+  }
+}
+
+const gotTheLock = app.requestSingleInstanceLock()
+
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', async (event, commandLine, workingDirectory) => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+      
+      const filePath = await getFilePathFromArgs(commandLine, workingDirectory)
+      if (filePath) {
+        openFile(filePath)
+      }
+    }
+  })
+
+  app.on('open-file', (event, filePath) => {
+    event.preventDefault()
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      openFile(filePath)
+    } else {
+      fileToOpen = filePath
+    }
+  })
+
+  app.whenReady().then(async () => {
+    const filePath = await getFilePathFromArgs(process.argv)
+    if (filePath) {
+      fileToOpen = filePath
+    }
+    createWindow()
+  })
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

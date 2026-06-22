@@ -1,0 +1,237 @@
+.preview-container {
+  height: 100%;
+  overflow: auto;
+  padding: 40px;
+  background: var(--bg-primary);
+}
+
+.preview-content {
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.7;
+  color: var(--text-primary);
+  font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+/* Markdown 正文样式 */
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  font-family: 'Lora', Georgia, serif;
+  margin-top: 28px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-heading);
+}
+
+.markdown-body h1 {
+  font-size: 2.1em;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid var(--border-light);
+}
+
+.markdown-body h2 {
+  font-size: 1.6em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.markdown-body h3 {
+  font-size: 1.3em;
+}
+
+.markdown-body h4 {
+  font-size: 1.1em;
+}
+
+.markdown-body p {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.markdown-body a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.markdown-body a:hover {
+  text-decoration: underline;
+}
+
+.markdown-body strong {
+  font-weight: 600;
+}
+
+.markdown-body em {
+  font-style: italic;
+}
+
+.markdown-body del {
+  text-decoration: line-through;
+  color: var(--text-tertiary);
+}
+
+.markdown-body blockquote {
+  margin: 0;
+  padding: 12px 16px;
+  color: var(--text-secondary);
+  border-left: 4px solid var(--accent);
+  background: var(--bg-hover);
+  border-radius: 0 6px 6px 0;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 2em;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.markdown-body li + li {
+  margin-top: 0.25em;
+}
+
+.markdown-body code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: var(--bg-active);
+  border-radius: 4px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: var(--accent);
+}
+
+.code-block-wrapper {
+  margin-bottom: 16px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--bg-code);
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
+  font-family: 'Outfit', 'Inter', sans-serif;
+  user-select: none;
+}
+
+.code-block-lang {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+}
+
+.code-block-copy {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.code-block-copy:hover {
+  color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.code-block-copy.copied {
+  color: #5db872; /* premium green color from DESIGN.md */
+  font-weight: 600;
+}
+
+.markdown-body pre {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  margin-bottom: 0;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.markdown-body pre code {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  line-height: inherit;
+  word-wrap: normal;
+  background-color: transparent;
+  border: 0;
+  font-size: 100%;
+  color: var(--text-primary);
+}
+
+.markdown-body img {
+  max-width: 100%;
+  box-sizing: border-box;
+  border-radius: 8px;
+}
+
+.markdown-body hr {
+  height: 2px;
+  padding: 0;
+  margin: 24px 0;
+  background-color: var(--border-light);
+  border: 0;
+}
+
+.markdown-body table {
+  border-spacing: 0;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  width: auto;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 8px 13px;
+  border: 1px solid var(--border-main);
+}
+
+.markdown-body table th {
+  font-weight: 600;
+  background-color: var(--bg-active);
+}
+
+.markdown-body table tr {
+  background-color: var(--bg-primary);
+  border-top: 1px solid var(--border-main);
+}
+
+.markdown-body table tr:nth-child(2n) {
+  background-color: var(--bg-active);
+}
+
+/* 任务列表 */
+.markdown-body .contains-task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.markdown-body .task-list-item {
+  display: flex;
+  align-items: center;
+}
+
+.markdown-body .task-list-item input[type="checkbox"] {
+  margin-right: 8px;
+  accent-color: var(--accent);
+}

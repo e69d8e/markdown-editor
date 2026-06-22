@@ -1,0 +1,403 @@
+.editor-container {
+  height: 100%;
+  overflow: auto;
+}
+
+/* 隐藏 Markdown 语法标记但保留 DOM，保证光标点击定位精准 */
+.cm-hidden-marker {
+  font-size: 0 !important;
+  color: transparent !important;
+  display: inline-block !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  vertical-align: middle !important;
+  pointer-events: none !important;
+}
+
+.editor-container .cm-editor {
+  height: 100%;
+}
+
+.editor-container .cm-focused {
+  outline: none;
+}
+
+.editor-container .cm-scroller {
+  overflow: auto;
+}
+
+.editor-container .cm-gutters {
+  background: var(--bg-active);
+  border-right: 1px solid var(--border-main);
+  color: var(--text-tertiary);
+}
+
+.editor-container .cm-activeLineGutter {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.editor-container .cm-activeLine {
+  background: rgba(204, 120, 92, 0.04);
+}
+
+.editor-container .cm-selectionBackground {
+  background: rgba(204, 120, 92, 0.12) !important;
+}
+
+.editor-container .cm-cursor {
+  border-left-color: var(--accent);
+}
+
+/* ========== 搜索面板样式 ========== */
+.editor-container .cm-panels {
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-main);
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.editor-container .cm-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.editor-container .cm-search input,
+.editor-container .cm-search .cm-textfield {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-main);
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.editor-container .cm-search input:focus,
+.editor-container .cm-search .cm-textfield:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(204, 120, 92, 0.15);
+}
+
+.editor-container .cm-search button,
+.editor-container .cm-search .cm-button {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-main);
+  border-radius: 5px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.editor-container .cm-search button:hover,
+.editor-container .cm-search .cm-button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+.editor-container .cm-search label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.editor-container .cm-search label input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+.editor-container .cm-search br {
+  display: none;
+}
+
+.editor-container .cm-searchMatch {
+  background: rgba(204, 120, 92, 0.2);
+  border-radius: 2px;
+}
+
+.editor-container .cm-searchMatch-selected {
+  background: rgba(204, 120, 92, 0.4);
+}
+
+.editor-container .cm-selectionMatch {
+  background: rgba(204, 120, 92, 0.1);
+}
+
+.cm-search-count {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  padding: 3px 8px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========== 原地预览模式样式 ========== */
+
+.wysiwyg-mode .cm-editor {
+  padding: 40px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.wysiwyg-mode .cm-content {
+  caret-color: var(--accent);
+}
+
+/* 标题样式 */
+.cm-heading-1 {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 2.1em;
+  font-weight: 600;
+  line-height: 1.25;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid var(--border-light);
+  color: var(--text-heading);
+  margin-top: 28px;
+  margin-bottom: 16px;
+}
+
+.cm-heading-2 {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 1.6em;
+  font-weight: 600;
+  line-height: 1.25;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-heading);
+  margin-top: 26px;
+  margin-bottom: 16px;
+}
+
+.cm-heading-3 {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 1.3em;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-heading);
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+.cm-heading-4 {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 1.1em;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-heading);
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+.cm-heading-5 {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 0.95em;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-heading);
+}
+
+.cm-heading-6 {
+  font-size: 0.85em;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-tertiary);
+}
+
+/* 粗体 */
+.cm-bold {
+  font-weight: 600;
+}
+
+/* 斜体 */
+.cm-italic {
+  font-style: italic;
+}
+
+/* 删除线 */
+.cm-strikethrough {
+  text-decoration: line-through;
+  color: var(--text-tertiary);
+}
+
+/* 行内代码 */
+.cm-inline-code {
+  padding: 0.2em 0.4em;
+  font-size: 85%;
+  background-color: var(--bg-active);
+  border-radius: 4px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: var(--accent);
+}
+
+/* 代码块整行与边框 */
+.cm-codeblock-line-start,
+.cm-codeblock-line,
+.cm-codeblock-line-end {
+  background-color: var(--bg-code) !important;
+  font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace !important;
+  font-size: 13px !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  color: var(--text-primary);
+}
+
+.cm-codeblock-line-start {
+  border-top: 1px solid var(--border-light);
+  border-left: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  margin-top: 14px;
+  padding-top: 10px !important;
+}
+
+.cm-codeblock-line {
+  border-left: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+}
+
+.cm-codeblock-line-end {
+  border-bottom: 1px solid var(--border-light);
+  border-left: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 10px !important;
+}
+
+/* 代码块头部 Widget */
+.cm-codeblock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  user-select: none;
+}
+
+.cm-codeblock-lang {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+}
+
+/* 引用块行 */
+.cm-blockquote-line {
+  background-color: var(--bg-hover) !important;
+  border-left: 4px solid var(--accent) !important;
+  padding-left: 16px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+/* 引用块文本 */
+.cm-blockquote {
+  color: var(--text-secondary);
+}
+
+/* 列表行 */
+.cm-list-line {
+  padding-left: 2.2em !important;
+  text-indent: -1.2em;
+}
+
+/* 列表项 */
+.cm-list-item {
+  line-height: 1.7;
+}
+
+/* Bullet Widget */
+.cm-bullet {
+  color: var(--accent);
+  user-select: none;
+  font-weight: 600;
+  display: inline-block;
+  width: 1em;
+  text-align: right;
+  margin-right: 0.2em;
+}
+
+/* 有序列表数字 */
+.cm-ordered-number {
+  color: var(--accent);
+  user-select: none;
+  font-weight: 500;
+  display: inline-block;
+  width: 1em;
+  text-align: right;
+  margin-right: 0.2em;
+}
+
+/* 链接 */
+.cm-link {
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cm-link:hover {
+  color: var(--accent-hover);
+}
+
+/* 图片 */
+.cm-inline-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 4px 0;
+  vertical-align: middle;
+}
+
+/* 分割线 */
+.cm-hr {
+  border: none;
+  border-top: 2px solid var(--border-light);
+  margin: 24px 0;
+}
+
+/* 复选框 */
+.cm-checkbox {
+  margin-right: 8px;
+  cursor: default;
+  accent-color: var(--accent);
+}
+
+/* 活动行（原地预览模式） */
+.wysiwyg-mode .cm-activeLine {
+  background: transparent;
+}
+
+.wysiwyg-mode .cm-activeLine .cm-heading-1,
+.wysiwyg-mode .cm-activeLine .cm-heading-2,
+.wysiwyg-mode .cm-activeLine .cm-heading-3,
+.wysiwyg-mode .cm-activeLine .cm-heading-4,
+.wysiwyg-mode .cm-activeLine .cm-heading-5,
+.wysiwyg-mode .cm-activeLine .cm-heading-6 {
+  font-size: inherit;
+  font-weight: inherit;
+  border-bottom: none;
+  padding-bottom: 0;
+  color: inherit;
+}
+
+/* 原地预览模式下，活动行显示原始样式 */
+.wysiwyg-mode .cm-activeLine {
+  background: rgba(204, 120, 92, 0.05);
+  border-radius: 4px;
+  box-shadow: inset 2px 0 0 0 var(--accent);
+}

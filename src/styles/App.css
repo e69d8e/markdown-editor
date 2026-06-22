@@ -1,0 +1,142 @@
+/* ========== 设计规范：全局变量 ========== */
+:root {
+  /* 主色调 (Warm Coral) */
+  --accent: #cc785c;
+  --accent-hover: #a9583e;
+  --accent-active: #8c422c;
+
+  /* 背景色 (Tinted Cream Canvas and Surfaces) */
+  --bg-primary: #faf9f5;
+  --bg-secondary: #f5f0e8;
+  --bg-toolbar: #efe9de;
+  --bg-hover: #e8e0d2;
+  --bg-active: #e6dfd8;
+  --bg-code: #f5f0e8;
+
+  /* 文字色 (Ink and Body) */
+  --text-primary: #141413;
+  --text-secondary: #3d3d3a;
+  --text-tertiary: #8e8b82;
+  --text-heading: #141413;
+
+  /* 边框色 */
+  --border-light: #e6dfd8;
+  --border-main: #d9d2c9;
+  --border-focus: #cc785c;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(20, 20, 19, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(20, 20, 19, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(20, 20, 19, 0.06);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-primary);
+}
+
+/* 统一滚动条样式（Windows 默认滚动条较宽） */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-main);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.editor-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-pane,
+.preview-pane {
+  overflow: hidden;
+  min-width: 200px;
+}
+
+.editor-pane-full {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 分隔条 */
+.divider {
+  width: 5px;
+  background: var(--border-main);
+  cursor: col-resize;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.divider:hover {
+  background: var(--accent);
+}
+
+.divider.dragging {
+  background: var(--accent-hover);
+}
+
+.divider-handle {
+  width: 3px;
+  height: 32px;
+  background: var(--text-tertiary);
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  opacity: 0.5;
+}
+
+.divider:hover .divider-handle {
+  background: var(--accent);
+  height: 48px;
+  opacity: 1;
+}
+
+.divider.dragging .divider-handle {
+  background: #ffffff;
+  height: 64px;
+  opacity: 1;
+}
+
+/* 拖动时禁用文本选择 */
+.editor-layout.resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.editor-layout.resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}

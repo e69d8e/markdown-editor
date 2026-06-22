@@ -36,8 +36,7 @@
     "linux": {
       "target": ["AppImage", "deb"],
       "icon": "build/icon.png",
-      "category": "Development",
-      "desktopName": "Markdown Editor"
+      "category": "Development"
     },
     "nsis": {
       "oneClick": false,

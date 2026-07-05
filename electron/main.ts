@@ -251,6 +251,7 @@ ipcMain.handle('dialog-save-file', async (_, { content, filePath }) => {
   }
 
   const result = await dialog.showSaveDialog(mainWindow, {
+    defaultPath: '未命名.md',
     filters: [
       { name: 'Markdown', extensions: ['md'] },
       { name: 'Text', extensions: ['txt'] }

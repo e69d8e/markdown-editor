@@ -137,7 +137,12 @@ function createMenu() {
           click: () => mainWindow?.webContents.send('menu-save-as')
         },
         { type: 'separator' },
-        isMac ? { role: 'close', accelerator: 'CmdOrCtrl+W' } : { role: 'quit', label: '退出', accelerator: 'CmdOrCtrl+Q' }
+        ...(isMac
+          ? [{ role: 'close', accelerator: 'CmdOrCtrl+W' }]
+          : [
+              { role: 'close', label: '关闭窗口', accelerator: 'CmdOrCtrl+W' },
+              { role: 'quit', label: '退出', accelerator: 'CmdOrCtrl+Q' }
+            ])
       ]
     },
     {

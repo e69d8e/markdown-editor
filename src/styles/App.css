@@ -130,6 +130,10 @@ html, body, #root {
   opacity: 1;
 }
 
+[data-theme="dark"] .divider.dragging .divider-handle {
+  background: #1a1a1a;
+}
+
 /* 拖动时禁用文本选择 */
 .editor-layout.resizing {
   cursor: col-resize;
@@ -139,4 +143,71 @@ html, body, #root {
 .editor-layout.resizing * {
   cursor: col-resize !important;
   user-select: none !important;
+}
+
+/* 文件拖放覆盖层 */
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(204, 120, 92, 0.12);
+  border: 3px dashed var(--accent);
+  pointer-events: none;
+}
+
+.drop-overlay span {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--bg-primary);
+  padding: 12px 24px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+/* focus-visible 样式 */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-radius: 6px;
+}
+
+/* ========== 暗色模式（手动切换 + 跟随系统） ========== */
+[data-theme="dark"] {
+  /* 主色调 */
+  --accent: #d4896e;
+  --accent-hover: #e0a088;
+  --accent-active: #cc785c;
+
+  /* 背景色 */
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #222222;
+  --bg-toolbar: #2a2a2a;
+  --bg-hover: #333333;
+  --bg-active: #3a3a3a;
+  --bg-code: #252525;
+
+  /* 文字色 */
+  --text-primary: #e8e4df;
+  --text-secondary: #b0aca6;
+  --text-tertiary: #787570;
+  --text-heading: #f0ece7;
+
+  /* 边框色 */
+  --border-light: #3a3a3a;
+  --border-main: #444444;
+  --border-focus: #d4896e;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 }

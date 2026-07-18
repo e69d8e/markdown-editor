@@ -8,6 +8,7 @@ import { search, searchKeymap, highlightSelectionMatches, getSearchQuery } from 
 import { syntaxHighlighting, indentOnInput, bracketMatching, foldGutter, HighlightStyle } from '@codemirror/language'
 import { tags } from '@lezer/highlight'
 import { createLivePreviewPlugin } from '../plugins/livePreview'
+import { insertMarkdown as insertMarkdownUtil } from '../utils/markdown'
 import { ViewMode } from './App'
 import '../styles/Editor.css'
 
@@ -19,21 +20,21 @@ interface EditorProps {
   onScroll?: (ratio: number) => void
 }
 
-// Markdown 语法高亮主题
+// Markdown 语法高亮主题（使用 CSS 变量适配暗色模式）
 const markdownHighlighting = HighlightStyle.define([
-  { tag: tags.heading1, fontSize: '1.6em', fontWeight: 'bold', color: '#0f172a' },
-  { tag: tags.heading2, fontSize: '1.4em', fontWeight: 'bold', color: '#0f172a' },
-  { tag: tags.heading3, fontSize: '1.2em', fontWeight: 'bold', color: '#0f172a' },
+  { tag: tags.heading1, fontSize: '1.6em', fontWeight: 'bold', color: 'var(--text-heading)' },
+  { tag: tags.heading2, fontSize: '1.4em', fontWeight: 'bold', color: 'var(--text-heading)' },
+  { tag: tags.heading3, fontSize: '1.2em', fontWeight: 'bold', color: 'var(--text-heading)' },
   { tag: tags.emphasis, fontStyle: 'italic' },
   { tag: tags.strong, fontWeight: 'bold' },
-  { tag: tags.strikethrough, textDecoration: 'line-through', color: '#94a3b8' },
-  { tag: tags.link, color: '#3b82f6', textDecoration: 'underline' },
-  { tag: tags.url, color: '#3b82f6' },
-  { tag: tags.monospace, fontFamily: 'monospace', background: '#f1f5f9', color: '#3b82f6' },
-  { tag: tags.quote, color: '#475569', borderLeft: '4px solid #3b82f6', paddingLeft: '12px' },
-  { tag: tags.list, color: '#0f172a' },
-  { tag: tags.processingInstruction, color: '#3b82f6' },
-  { tag: tags.contentSeparator, color: '#e2e8f0' }
+  { tag: tags.strikethrough, textDecoration: 'line-through', color: 'var(--text-tertiary)' },
+  { tag: tags.link, color: 'var(--accent)', textDecoration: 'underline' },
+  { tag: tags.url, color: 'var(--accent)' },
+  { tag: tags.monospace, fontFamily: 'monospace', background: 'var(--bg-active)', color: 'var(--accent)' },
+  { tag: tags.quote, color: 'var(--text-secondary)', borderLeft: '4px solid var(--accent)', paddingLeft: '12px' },
+  { tag: tags.list, color: 'var(--text-primary)' },
+  { tag: tags.processingInstruction, color: 'var(--accent)' },
+  { tag: tags.contentSeparator, color: 'var(--border-light)' }
 ])
 
 // 搜索匹配计数插件：显示「当前第几个 / 共几个」
@@ -146,10 +147,10 @@ export default function Editor({ content, onChange, editorRef, viewMode, onScrol
         ...historyKeymap,
         ...searchKeymap,
         indentWithTab,
-        { key: 'Mod-b', run: () => insertMarkdown('**', '**') },
-        { key: 'Mod-i', run: () => insertMarkdown('*', '*') },
-        { key: 'Mod-`', run: () => insertMarkdown('`', '`') },
-        { key: 'Mod-k', run: () => insertMarkdown('[', '](url)') }
+        { key: 'Mod-b', run: (v) => insertMarkdownUtil(v, '**', '**') },
+        { key: 'Mod-i', run: (v) => insertMarkdownUtil(v, '*', '*') },
+        { key: 'Mod-`', run: (v) => insertMarkdownUtil(v, '`', '`') },
+        { key: 'Mod-k', run: (v) => insertMarkdownUtil(v, '[', '](url)') }
       ]),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
@@ -160,17 +161,37 @@ export default function Editor({ content, onChange, editorRef, viewMode, onScrol
         '&': {
           fontSize: '14px',
           height: '100%',
-          backgroundColor: '#ffffff'
+          backgroundColor: 'var(--bg-primary)'
         },
         '.cm-content': {
           fontFamily: isWysiwyg
             ? "'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
             : "'Fira Code', 'Cascadia Code', Consolas, monospace",
           padding: '10px 0',
-          color: 'var(--text-primary)'
+          color: 'var(--text-primary)',
+          caretColor: 'var(--accent)'
         },
         '.cm-line': {
           padding: '0 10px'
+        },
+        '.cm-gutters': {
+          backgroundColor: 'var(--bg-active)',
+          color: 'var(--text-tertiary)',
+          borderRight: '1px solid var(--border-main)'
+        },
+        '.cm-activeLineGutter': {
+          backgroundColor: 'var(--bg-hover)',
+          color: 'var(--text-primary)'
+        },
+        '.cm-cursor, .cm-dropCursor': {
+          borderLeftColor: 'var(--accent)',
+          borderLeftWidth: '2px'
+        },
+        '&.cm-focused .cm-cursor': {
+          borderLeftColor: 'var(--accent)'
+        },
+        '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': {
+          backgroundColor: 'rgba(204, 120, 92, 0.15)'
         }
       }),
       search({ top: true }),
@@ -256,21 +277,6 @@ export default function Editor({ content, onChange, editorRef, viewMode, onScrol
       view.focus()
     }
   }, [content])
-
-  function insertMarkdown(before: string, after: string): boolean {
-    const view = viewRef.current
-    if (!view) return false
-
-    const { from, to } = view.state.selection.main
-    const selected = view.state.sliceDoc(from, to)
-    const replacement = before + selected + after
-
-    view.dispatch({
-      changes: { from, to, insert: replacement },
-      selection: { anchor: from + before.length, head: from + before.length + selected.length }
-    })
-    return true
-  }
 
   return <div ref={containerRef} className={`editor-container ${viewMode === 'wysiwyg' ? 'wysiwyg-mode' : ''}`} />
 }

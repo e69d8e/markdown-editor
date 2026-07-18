@@ -162,3 +162,20 @@
 .sidebar-divider:hover {
   background: var(--accent);
 }
+
+/* 暗色模式适配 */
+[data-theme="dark"] .tree-file.active {
+  color: #1a1a1a;
+}
+
+[data-theme="dark"] .tree-file.active .tree-icon {
+  color: #1a1a1a;
+}
+
+[data-theme="dark"] .tree-file.active .tree-name {
+  color: #1a1a1a;
+}
+
+[data-theme="dark"] .tree-file.active .folder-icon {
+  color: #1a1a1a;
+}

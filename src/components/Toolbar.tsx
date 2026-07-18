@@ -1,5 +1,24 @@
+import React from 'react'
 import { EditorView } from '@codemirror/view'
 import { ViewMode } from './App'
+import { insertMarkdown, insertLinePrefix } from '../utils/markdown'
+import {
+  NewFileIcon,
+  OpenFileIcon,
+  OpenFolderIcon,
+  SaveIcon,
+  SaveAsIcon,
+  ListIcon,
+  OrderedListIcon,
+  QuoteIcon,
+  CodeBlockIcon,
+  SidebarIcon,
+  SourceModeIcon,
+  WysiwygModeIcon,
+  SplitModeIcon,
+  SunIcon,
+  MoonIcon
+} from './Icons'
 import '../styles/Toolbar.css'
 
 interface ToolbarProps {
@@ -15,9 +34,11 @@ interface ToolbarProps {
   onViewModeChange: (mode: ViewMode) => void
   sidebarOpen: boolean
   onToggleSidebar: () => void
+  theme: 'light' | 'dark'
+  onToggleTheme: () => void
 }
 
-export default function Toolbar({
+const Toolbar = React.memo(function Toolbar({
   filePath,
   stats,
   editorRef,
@@ -29,45 +50,18 @@ export default function Toolbar({
   viewMode,
   onViewModeChange,
   sidebarOpen,
-  onToggleSidebar
+  onToggleSidebar,
+  theme,
+  onToggleTheme
 }: ToolbarProps) {
-  const insertMarkdown = (before: string, after: string) => {
+  const handleInsertMarkdown = (before: string, after: string) => {
     const view = editorRef.current
-    if (!view) return
-
-    const { from, to } = view.state.selection.main
-    const selected = view.state.sliceDoc(from, to) || '文本'
-    const replacement = before + selected + after
-
-    view.dispatch({
-      changes: { from, to, insert: replacement },
-      selection: {
-        anchor: from + before.length,
-        head: from + before.length + selected.length
-      }
-    })
-    view.focus()
+    if (view) insertMarkdown(view, before, after)
   }
 
-  const insertLinePrefix = (prefix: string) => {
+  const handleInsertLinePrefix = (prefix: string) => {
     const view = editorRef.current
-    if (!view) return
-
-    const { from, to } = view.state.selection.main
-    const line = view.state.doc.lineAt(from)
-    // 去除已有的标题/列表/引用前缀再添加新前缀
-    const stripped = line.text.replace(/^(#{1,6}\s+|[-*+]\s+|\d+\.\s+|>\s+)/, '')
-    const replacement = prefix + stripped
-
-    const lengthDiff = replacement.length - line.text.length
-    const newAnchor = Math.max(line.from, from + lengthDiff)
-    const newHead = Math.max(line.from, to + lengthDiff)
-
-    view.dispatch({
-      changes: { from: line.from, to: line.to, insert: replacement },
-      selection: { anchor: newAnchor, head: newHead }
-    })
-    view.focus()
+    if (view) insertLinePrefix(view, prefix)
   }
 
   // 根据平台显示快捷键修饰符
@@ -76,57 +70,36 @@ export default function Toolbar({
   return (
     <div className="toolbar">
       <div className="toolbar-group">
-        <button onClick={onNew} onMouseDown={(e) => e.preventDefault()} title={`新建 (${modKey}+N)`}>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="12" y1="18" x2="12" y2="12" />
-            <line x1="9" y1="15" x2="15" y2="15" />
-          </svg>
+        <button onClick={onNew} onMouseDown={(e) => e.preventDefault()} title={`新建 (${modKey}+N)`} aria-label="新建文件">
+          <NewFileIcon />
         </button>
-        <button onClick={onOpen} onMouseDown={(e) => e.preventDefault()} title={`打开 (${modKey}+O)`}>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </svg>
+        <button onClick={onOpen} onMouseDown={(e) => e.preventDefault()} title={`打开 (${modKey}+O)`} aria-label="打开文件">
+          <OpenFileIcon />
         </button>
-        <button onClick={onOpenFolder} onMouseDown={(e) => e.preventDefault()} title={`打开文件夹 (${modKey}+Shift+O)`}>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-            <line x1="12" y1="11" x2="12" y2="17" />
-            <line x1="9" y1="14" x2="15" y2="14" />
-          </svg>
+        <button onClick={onOpenFolder} onMouseDown={(e) => e.preventDefault()} title={`打开文件夹 (${modKey}+Shift+O)`} aria-label="打开文件夹">
+          <OpenFolderIcon />
         </button>
-        <button onClick={onSave} onMouseDown={(e) => e.preventDefault()} title={`保存 (${modKey}+S)`}>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-            <polyline points="17 21 17 13 7 13 7 21" />
-            <polyline points="7 3 7 8 15 8" />
-          </svg>
+        <button onClick={onSave} onMouseDown={(e) => e.preventDefault()} title={`保存 (${modKey}+S)`} aria-label="保存文件">
+          <SaveIcon />
         </button>
-        <button onClick={onSaveAs} onMouseDown={(e) => e.preventDefault()} title={`另存为 (${modKey}+Shift+S)`}>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-            <polyline points="17 21 17 13 7 13 7 21" />
-            <polyline points="7 3 7 8 15 8" />
-            <line x1="12" y1="11" x2="12" y2="17" />
-            <line x1="9" y1="14" x2="15" y2="14" />
-          </svg>
+        <button onClick={onSaveAs} onMouseDown={(e) => e.preventDefault()} title={`另存为 (${modKey}+Shift+S)`} aria-label="另存为">
+          <SaveAsIcon />
         </button>
       </div>
 
       <div className="toolbar-separator" />
 
       <div className="toolbar-group">
-        <button onClick={() => insertMarkdown('**', '**')} onMouseDown={(e) => e.preventDefault()} title={`加粗 (${modKey}+B)`}>
+        <button onClick={() => handleInsertMarkdown('**', '**')} onMouseDown={(e) => e.preventDefault()} title={`加粗 (${modKey}+B)`} aria-label="加粗">
           <strong>B</strong>
         </button>
-        <button onClick={() => insertMarkdown('*', '*')} onMouseDown={(e) => e.preventDefault()} title={`斜体 (${modKey}+I)`}>
+        <button onClick={() => handleInsertMarkdown('*', '*')} onMouseDown={(e) => e.preventDefault()} title={`斜体 (${modKey}+I)`} aria-label="斜体">
           <em>I</em>
         </button>
-        <button onClick={() => insertMarkdown('~~', '~~')} onMouseDown={(e) => e.preventDefault()} title="删除线">
+        <button onClick={() => handleInsertMarkdown('~~', '~~')} onMouseDown={(e) => e.preventDefault()} title="删除线" aria-label="删除线">
           <s>S</s>
         </button>
-        <button onClick={() => insertMarkdown('`', '`')} onMouseDown={(e) => e.preventDefault()} title={`行内代码 (${modKey}+\`)`}>
+        <button onClick={() => handleInsertMarkdown('`', '`')} onMouseDown={(e) => e.preventDefault()} title={`行内代码 (${modKey}+\`)`} aria-label="行内代码">
           <code>{'</>'}</code>
         </button>
       </div>
@@ -134,13 +107,13 @@ export default function Toolbar({
       <div className="toolbar-separator" />
 
       <div className="toolbar-group">
-        <button onClick={() => insertLinePrefix('# ')} onMouseDown={(e) => e.preventDefault()} title="标题1">
+        <button onClick={() => handleInsertLinePrefix('# ')} onMouseDown={(e) => e.preventDefault()} title="标题1" aria-label="标题1">
           H1
         </button>
-        <button onClick={() => insertLinePrefix('## ')} onMouseDown={(e) => e.preventDefault()} title="标题2">
+        <button onClick={() => handleInsertLinePrefix('## ')} onMouseDown={(e) => e.preventDefault()} title="标题2" aria-label="标题2">
           H2
         </button>
-        <button onClick={() => insertLinePrefix('### ')} onMouseDown={(e) => e.preventDefault()} title="标题3">
+        <button onClick={() => handleInsertLinePrefix('### ')} onMouseDown={(e) => e.preventDefault()} title="标题3" aria-label="标题3">
           H3
         </button>
       </div>
@@ -148,36 +121,17 @@ export default function Toolbar({
       <div className="toolbar-separator" />
 
       <div className="toolbar-group">
-        <button onClick={() => insertLinePrefix('- ')} onMouseDown={(e) => e.preventDefault()} title="无序列表">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="8" y1="6" x2="21" y2="6" />
-            <line x1="8" y1="12" x2="21" y2="12" />
-            <line x1="8" y1="18" x2="21" y2="18" />
-            <line x1="3" y1="6" x2="3.01" y2="6" />
-            <line x1="3" y1="12" x2="3.01" y2="12" />
-            <line x1="3" y1="18" x2="3.01" y2="18" />
-          </svg>
+        <button onClick={() => handleInsertLinePrefix('- ')} onMouseDown={(e) => e.preventDefault()} title="无序列表" aria-label="无序列表">
+          <ListIcon />
         </button>
-        <button onClick={() => insertLinePrefix('1. ')} onMouseDown={(e) => e.preventDefault()} title="有序列表">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="10" y1="6" x2="21" y2="6" />
-            <line x1="10" y1="12" x2="21" y2="12" />
-            <line x1="10" y1="18" x2="21" y2="18" />
-            <path d="M4 6h1v4" />
-            <path d="M4 10h2" />
-            <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
-          </svg>
+        <button onClick={() => handleInsertLinePrefix('1. ')} onMouseDown={(e) => e.preventDefault()} title="有序列表" aria-label="有序列表">
+          <OrderedListIcon />
         </button>
-        <button onClick={() => insertLinePrefix('> ')} onMouseDown={(e) => e.preventDefault()} title="引用">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-            <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z" />
-          </svg>
+        <button onClick={() => handleInsertLinePrefix('> ')} onMouseDown={(e) => e.preventDefault()} title="引用" aria-label="引用">
+          <QuoteIcon />
         </button>
-        <button onClick={() => insertMarkdown('\n```\n', '\n```\n')} onMouseDown={(e) => e.preventDefault()} title="代码块">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="16 18 22 12 16 6" />
-            <polyline points="8 6 2 12 8 18" />
-          </svg>
+        <button onClick={() => handleInsertMarkdown('\n```\n', '\n```\n')} onMouseDown={(e) => e.preventDefault()} title="代码块" aria-label="代码块">
+          <CodeBlockIcon />
         </button>
       </div>
 
@@ -190,11 +144,24 @@ export default function Toolbar({
           onClick={onToggleSidebar}
           onMouseDown={(e) => e.preventDefault()}
           title="切换侧边栏"
+          aria-label="切换侧边栏"
         >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <line x1="9" y1="3" x2="9" y2="21" />
-          </svg>
+          <SidebarIcon />
+        </button>
+      </div>
+
+      <div className="toolbar-separator" />
+
+      {/* 主题切换 */}
+      <div className="toolbar-group">
+        <button
+          className="view-mode-btn"
+          onClick={onToggleTheme}
+          onMouseDown={(e) => e.preventDefault()}
+          title={theme === 'light' ? '切换到暗色模式' : '切换到亮色模式'}
+          aria-label={theme === 'light' ? '切换到暗色模式' : '切换到亮色模式'}
+        >
+          {theme === 'light' ? <MoonIcon /> : <SunIcon />}
         </button>
       </div>
 
@@ -207,33 +174,27 @@ export default function Toolbar({
           onClick={() => onViewModeChange('source')}
           onMouseDown={(e) => e.preventDefault()}
           title="源码模式"
+          aria-label="源码模式"
         >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="16 18 22 12 16 6" />
-            <polyline points="8 6 2 12 8 18" />
-          </svg>
+          <SourceModeIcon />
         </button>
         <button
           className={`view-mode-btn ${viewMode === 'wysiwyg' ? 'active' : ''}`}
           onClick={() => onViewModeChange('wysiwyg')}
           onMouseDown={(e) => e.preventDefault()}
           title="原地预览模式"
+          aria-label="原地预览模式"
         >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-          </svg>
+          <WysiwygModeIcon />
         </button>
         <button
           className={`view-mode-btn ${viewMode === 'split' ? 'active' : ''}`}
           onClick={() => onViewModeChange('split')}
           onMouseDown={(e) => e.preventDefault()}
           title="分栏模式"
+          aria-label="分栏模式"
         >
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <line x1="12" y1="3" x2="12" y2="21" />
-          </svg>
+          <SplitModeIcon />
         </button>
       </div>
 
@@ -251,4 +212,6 @@ export default function Toolbar({
       </div>
     </div>
   )
-}
+})
+
+export default Toolbar

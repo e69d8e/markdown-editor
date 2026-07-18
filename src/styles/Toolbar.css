@@ -145,3 +145,12 @@
   background: var(--accent-hover);
   color: #ffffff;
 }
+
+/* 暗色模式适配 */
+[data-theme="dark"] .view-mode-btn.active {
+  color: #1a1a1a;
+}
+
+[data-theme="dark"] .view-mode-btn.active:hover {
+  color: #1a1a1a;
+}

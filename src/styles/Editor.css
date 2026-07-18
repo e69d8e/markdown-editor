@@ -46,8 +46,15 @@
   background: rgba(204, 120, 92, 0.12) !important;
 }
 
-.editor-container .cm-cursor {
-  border-left-color: var(--accent);
+.editor-container .cm-cursor,
+.editor-container .cm-cursor-primary {
+  border-left-color: var(--accent) !important;
+  border-left-width: 2px !important;
+}
+
+/* 兼容 caret-color（某些 CodeMirror 版本用这个） */
+.editor-container .cm-content {
+  caret-color: var(--accent);
 }
 
 /* ========== 搜索面板样式 ========== */
@@ -398,4 +405,29 @@
   background: rgba(204, 120, 92, 0.05);
   border-radius: 4px;
   box-shadow: inset 2px 0 0 0 var(--accent);
+}
+
+/* 暗色模式适配 */
+[data-theme="dark"] .editor-container .cm-activeLine {
+  background: rgba(212, 137, 110, 0.06);
+}
+
+[data-theme="dark"] .editor-container .cm-selectionBackground {
+  background: rgba(212, 137, 110, 0.18) !important;
+}
+
+[data-theme="dark"] .editor-container .cm-searchMatch {
+  background: rgba(212, 137, 110, 0.25);
+}
+
+[data-theme="dark"] .editor-container .cm-searchMatch-selected {
+  background: rgba(212, 137, 110, 0.45);
+}
+
+[data-theme="dark"] .editor-container .cm-selectionMatch {
+  background: rgba(212, 137, 110, 0.12);
+}
+
+[data-theme="dark"] .wysiwyg-mode .cm-activeLine {
+  background: rgba(212, 137, 110, 0.08);
 }

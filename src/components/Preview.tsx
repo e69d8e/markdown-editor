@@ -1,4 +1,4 @@
-import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
+import React, { useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 import 'highlight.js/styles/github.css'
 import '../styles/Preview.css'
 
@@ -11,7 +11,7 @@ export interface PreviewRef {
   scrollToRatio: (ratio: number) => void
 }
 
-const Preview = forwardRef<PreviewRef, PreviewProps>(({ html, onScroll }, ref) => {
+const Preview = React.memo(forwardRef<PreviewRef, PreviewProps>(({ html, onScroll }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useImperativeHandle(ref, () => ({
@@ -59,6 +59,8 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({ html, onScroll }, ref) =
       className="preview-container"
       onScroll={handleScroll}
       onClick={handleCopyClick}
+      role="document"
+      aria-label="文档预览"
     >
       <div
         className="preview-content markdown-body"
@@ -66,7 +68,7 @@ const Preview = forwardRef<PreviewRef, PreviewProps>(({ html, onScroll }, ref) =
       />
     </div>
   )
-})
+}))
 
 Preview.displayName = 'Preview'
 

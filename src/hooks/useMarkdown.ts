@@ -1,29 +1,14 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
+import DOMPurify from 'dompurify'
+import type { FileEntry, ElectronAPI } from '../types'
 
-export interface FileEntry {
-  name: string
-  path: string
-  isDirectory: boolean
-}
+export type { FileEntry }
 
 declare global {
   interface Window {
-    electronAPI: {
-      openFile: () => Promise<{ filePath: string; content: string } | null>
-      openFolder: () => Promise<string | null>
-      saveFile: (content: string, filePath?: string) => Promise<string | null>
-      getInitialFile: () => Promise<{ filePath: string; content: string } | null>
-      readDirectory: (dirPath: string) => Promise<FileEntry[]>
-      readFileContent: (filePath: string) => Promise<{ filePath: string; content: string } | null>
-      onNewFile: (callback: () => void) => () => void
-      onFileOpened: (callback: (data: { filePath: string; content: string }) => void) => () => void
-      onFolderOpened: (callback: (folderPath: string) => void) => () => void
-      onSaveFile: (callback: () => void) => () => void
-      onSaveAs: (callback: () => void) => () => void
-      removeAllListeners: (channel: string) => void
-    }
+    electronAPI: ElectronAPI
   }
 }
 
@@ -72,10 +57,50 @@ export function useMarkdown() {
   useEffect(() => { contentRef.current = content }, [content])
   useEffect(() => { filePathRef.current = filePath }, [filePath])
 
-  // 解析 Markdown
+  // 防抖解析 Markdown（150ms，DOMPurify 防止 XSS）
+  const renderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
-    setHtml(md.render(content))
+    if (renderTimerRef.current) clearTimeout(renderTimerRef.current)
+    renderTimerRef.current = setTimeout(() => {
+      setHtml(DOMPurify.sanitize(md.render(content)))
+    }, 150)
+    return () => {
+      if (renderTimerRef.current) clearTimeout(renderTimerRef.current)
+    }
   }, [content])
+
+  // 防抖统计词数、字符数、行数（300ms）
+  const [stats, setStats] = useState({ words: 0, chars: 0, lines: 0 })
+  const statsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    if (statsTimerRef.current) clearTimeout(statsTimerRef.current)
+    statsTimerRef.current = setTimeout(() => {
+      const lines = content.split('\n').length
+      const chars = content.replace(/\s/g, '').length
+      const cjk = (content.match(/[一-鿿㐀-䶿豈-﫿]/g) || []).length
+      const nonCjk = content
+        .replace(/[一-鿿㐀-䶿豈-﫿]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length > 0).length
+      setStats({ words: cjk + nonCjk, chars, lines })
+    }, 300)
+    return () => {
+      if (statsTimerRef.current) clearTimeout(statsTimerRef.current)
+    }
+  }, [content])
+
+  // 脏状态跟踪：savedContentRef 记录上次保存/打开的内容
+  const savedContentRef = useRef(content)
+
+  // 每次渲染时计算脏状态
+  const isDirty = content !== savedContentRef.current
+
+  // 保存/新建/打开后重置（更新 ref，触发重渲染使 isDirty 生效）
+  const [, forceUpdate] = useState(0)
+  const resetDirty = useCallback(() => {
+    savedContentRef.current = contentRef.current
+    forceUpdate(v => v + 1)
+  }, [])
 
   // 启动时加载初始文件
   useEffect(() => {
@@ -83,6 +108,7 @@ export function useMarkdown() {
       if (window.electronAPI && window.electronAPI.getInitialFile) {
         const result = await window.electronAPI.getInitialFile()
         if (result) {
+          savedContentRef.current = result.content
           setContent(result.content)
           setFilePath(result.filePath)
         }
@@ -93,6 +119,7 @@ export function useMarkdown() {
 
   // 新建文件
   const handleNewFile = useCallback(() => {
+    savedContentRef.current = '# 新文档\n\n'
     setContent('# 新文档\n\n')
     setFilePath(null)
   }, [])
@@ -101,6 +128,7 @@ export function useMarkdown() {
   const handleOpenFile = useCallback(async () => {
     const result = await window.electronAPI.openFile()
     if (result) {
+      savedContentRef.current = result.content
       setContent(result.content)
       setFilePath(result.filePath)
     }
@@ -118,6 +146,7 @@ export function useMarkdown() {
   const openFileByPath = useCallback(async (path: string) => {
     const result = await window.electronAPI.readFileContent(path)
     if (result) {
+      savedContentRef.current = result.content
       setContent(result.content)
       setFilePath(result.filePath)
     }
@@ -128,22 +157,36 @@ export function useMarkdown() {
     const currentContent = contentRef.current
     const currentPath = filePathRef.current
     if (currentPath) {
-      await window.electronAPI.saveFile(currentContent, currentPath)
+      const savedPath = await window.electronAPI.saveFile(currentContent, currentPath)
+      if (savedPath) {
+        if (savedPath !== currentPath) {
+          setFilePath(savedPath)
+        }
+        resetDirty()
+        return savedPath
+      }
+      return null
     } else {
       const savedPath = await window.electronAPI.saveFile(currentContent)
       if (savedPath) {
         setFilePath(savedPath)
+        resetDirty()
+        return savedPath
       }
+      return null
     }
-  }, [])
+  }, [resetDirty])
 
   // 另存为（使用 ref 确保始终读取最新值）
   const handleSaveAs = useCallback(async () => {
     const savedPath = await window.electronAPI.saveFile(contentRef.current)
     if (savedPath) {
       setFilePath(savedPath)
+      resetDirty()
+      return savedPath
     }
-  }, [])
+    return null
+  }, [resetDirty])
 
   const handleNewFileRef = useRef(handleNewFile)
   const handleOpenFileRef = useRef(handleOpenFile)
@@ -157,22 +200,13 @@ export function useMarkdown() {
     handleOpenFolderRef.current = handleOpenFolder
     handleSaveFileRef.current = handleSaveFile
     handleSaveAsRef.current = handleSaveAs
-  })
-
-  // 同步窗口标题
-  useEffect(() => {
-    if (filePath) {
-      const fileName = filePath.split(/[/\\]/).pop() || filePath
-      document.title = `${fileName} - Markdown Editor`
-    } else {
-      document.title = 'Markdown Editor'
-    }
-  }, [filePath])
+  }, [handleNewFile, handleOpenFile, handleOpenFolder, handleSaveFile, handleSaveAs])
 
   // 注册菜单事件（使用返回的清理函数精确移除监听器）
   useEffect(() => {
     const disposeNewFile = window.electronAPI.onNewFile(() => handleNewFileRef.current())
     const disposeFileOpened = window.electronAPI.onFileOpened((data) => {
+      savedContentRef.current = data.content
       setContent(data.content)
       setFilePath(data.filePath)
     })
@@ -191,19 +225,33 @@ export function useMarkdown() {
     }
   }, [])
 
-  // 统计词数、字符数、行数
-  const stats = useMemo(() => {
-    const lines = content.split('\n').length
-    const chars = content.replace(/\s/g, '').length
-    // 中文等 CJK 字符每个计为一词，英文按空格分词
-    const cjk = (content.match(/[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/g) || []).length
-    const nonCjk = content
-      .replace(/[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/g, ' ')
-      .split(/\s+/)
-      .filter(w => w.length > 0).length
-    const words = cjk + nonCjk
-    return { words, chars, lines }
-  }, [content])
+  // 同步脏状态到主进程（用 ref 避免重复发送）
+  const lastDirtyRef = useRef(isDirty)
+  useEffect(() => {
+    if (lastDirtyRef.current !== isDirty) {
+      lastDirtyRef.current = isDirty
+      window.electronAPI?.setDirty?.(isDirty)
+    }
+  })
+
+  // 注册 Electron 原生关闭确认（主进程通过 IPC 查询脏状态和触发保存）
+  useEffect(() => {
+    window.electronAPI.onCheckDirty(() => contentRef.current !== savedContentRef.current)
+    window.electronAPI.onSaveFileDirect(async () => {
+      await handleSaveFileRef.current()
+    })
+  }, [])
+
+  // 同步窗口标题（含脏状态标记）
+  useEffect(() => {
+    const prefix = isDirty ? '* ' : ''
+    if (filePath) {
+      const fileName = filePath.split(/[/\\]/).pop() || filePath
+      document.title = prefix + fileName + ' - Markdown Editor'
+    } else {
+      document.title = prefix + 'Markdown Editor'
+    }
+  }, [filePath, isDirty])
 
   return {
     content,
@@ -213,6 +261,7 @@ export function useMarkdown() {
     folderPath,
     setFolderPath,
     stats,
+    isDirty,
     handleNewFile,
     handleOpenFile,
     handleOpenFolder,

@@ -7,6 +7,9 @@ const isDev = !app.isPackaged
 app.name = 'Markdown Editor'
 
 let mainWindow: BrowserWindow | null = null
+let fileToOpen: string | null = null
+let isQuitting = false
+let isDirty = false
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -30,6 +33,43 @@ function createWindow() {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  // 关闭窗口前检查未保存变更
+  mainWindow.on('close', async (e) => {
+    if (!isDirty) return // 文档未修改，允许关闭
+
+    // 文档已修改，阻止关闭并弹出确认框
+    e.preventDefault()
+
+    const { response } = await dialog.showMessageBox(mainWindow!, {
+      type: 'warning',
+      buttons: ['保存', '不保存', '取消'],
+      defaultId: 0,
+      cancelId: 2,
+      title: 'Markdown Editor',
+      message: '文档已修改但未保存',
+      detail: '是否保存更改？'
+    })
+    if (response === 0) {
+      // 保存后关闭
+      mainWindow!.webContents.send('save-file-direct')
+      await new Promise<void>(resolve => {
+        mainWindow!.webContents.once('save-file-direct-done', () => resolve())
+        // 超时保护
+        setTimeout(resolve, 3000)
+      })
+      mainWindow!.removeAllListeners('close')
+      mainWindow!.close()
+    } else if (response === 1) {
+      // 不保存直接关闭
+      mainWindow!.removeAllListeners('close')
+      mainWindow!.close()
+    }
+    // response === 2: 取消，不关闭
+    if (response === 2) {
+      isQuitting = false // 重置退出标志，避免后续关闭窗口时意外退出
+    }
+  })
 
   createMenu()
 
@@ -58,11 +98,11 @@ function createMenu() {
         { type: 'separator' },
         { role: 'services' },
         { type: 'separator' },
-        { role: 'hide' },
-        { role: 'hideOthers' },
+        { role: 'hide', accelerator: 'CmdOrCtrl+H' },
+        { role: 'hideOthers', accelerator: 'CmdOrCtrl+Alt+H' },
         { role: 'unhide' },
         { type: 'separator' },
-        { role: 'quit' }
+        { role: 'quit', accelerator: 'CmdOrCtrl+Q' }
       ]
     })
   }
@@ -97,7 +137,7 @@ function createMenu() {
           click: () => mainWindow?.webContents.send('menu-save-as')
         },
         { type: 'separator' },
-        isMac ? { role: 'close' } : { role: 'quit', label: '退出' }
+        isMac ? { role: 'close', accelerator: 'CmdOrCtrl+W' } : { role: 'quit', label: '退出', accelerator: 'CmdOrCtrl+Q' }
       ]
     },
     {
@@ -178,6 +218,13 @@ async function handleOpenFolder() {
 }
 
 // IPC 处理
+ipcMain.on('set-dirty', (_, dirty: boolean) => {
+  isDirty = dirty
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.setDocumentEdited(dirty)
+  }
+})
+
 ipcMain.handle('dialog-open-file', async () => {
   if (!mainWindow) return null
 
@@ -213,6 +260,10 @@ ipcMain.handle('dialog-open-folder', async () => {
 
 ipcMain.handle('read-directory', async (_, dirPath: string) => {
   try {
+    // 校验路径确实是目录
+    const dirStat = await stat(dirPath)
+    if (!dirStat.isDirectory()) return []
+
     const entries = await readdir(dirPath, { withFileTypes: true })
     const result = entries
       .filter(e => !e.name.startsWith('.'))
@@ -234,6 +285,10 @@ ipcMain.handle('read-directory', async (_, dirPath: string) => {
 
 ipcMain.handle('read-file-content', async (_, filePath: string) => {
   try {
+    // 校验路径确实是文件
+    const fileStat = await stat(filePath)
+    if (!fileStat.isFile()) return null
+
     const content = await readFile(filePath, 'utf-8')
     return { filePath, content }
   } catch (error) {
@@ -246,8 +301,25 @@ ipcMain.handle('dialog-save-file', async (_, { content, filePath }) => {
   if (!mainWindow) return null
 
   if (filePath) {
-    await writeFile(filePath, content, 'utf-8')
-    return filePath
+    try {
+      await writeFile(filePath, content, 'utf-8')
+      return filePath
+    } catch (error) {
+      console.error('Failed to save file:', error)
+      // 写入失败时回退到另存为对话框
+      const result = await dialog.showSaveDialog(mainWindow, {
+        defaultPath: filePath.split(/[/\\]/).pop() || '未命名.md',
+        filters: [
+          { name: 'Markdown', extensions: ['md'] },
+          { name: 'Text', extensions: ['txt'] }
+        ]
+      })
+      if (!result.canceled && result.filePath) {
+        await writeFile(result.filePath, content, 'utf-8')
+        return result.filePath
+      }
+      return null
+    }
   }
 
   const result = await dialog.showSaveDialog(mainWindow, {
@@ -279,8 +351,6 @@ ipcMain.handle('get-initial-file', async () => {
   }
   return null
 })
-
-let fileToOpen: string | null = null
 
 async function getFilePathFromArgs(args: string[], workingDir?: string): Promise<string | null> {
   for (let i = 1; i < args.length; i++) {
@@ -353,8 +423,12 @@ if (!gotTheLock) {
   })
 }
 
+app.on('before-quit', () => {
+  isQuitting = true
+})
+
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+  if (process.platform !== 'darwin' || isQuitting) {
     app.quit()
   }
 })

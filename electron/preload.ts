@@ -13,12 +13,14 @@ export interface ElectronAPI {
   getInitialFile: () => Promise<{ filePath: string; content: string } | null>
   readDirectory: (dirPath: string) => Promise<FileEntry[]>
   readFileContent: (filePath: string) => Promise<{ filePath: string; content: string } | null>
+  onCheckDirty: (handler: () => boolean) => void
+  setDirty: (dirty: boolean) => void
+  onSaveFileDirect: (handler: () => Promise<void>) => void
   onNewFile: (callback: () => void) => () => void
   onFileOpened: (callback: (data: { filePath: string; content: string }) => void) => () => void
   onFolderOpened: (callback: (folderPath: string) => void) => () => void
   onSaveFile: (callback: () => void) => () => void
   onSaveAs: (callback: () => void) => () => void
-  removeAllListeners: (channel: string) => void
 }
 
 const electronAPI: ElectronAPI = {
@@ -29,6 +31,20 @@ const electronAPI: ElectronAPI = {
   getInitialFile: () => ipcRenderer.invoke('get-initial-file'),
   readDirectory: (dirPath: string) => ipcRenderer.invoke('read-directory', dirPath),
   readFileContent: (filePath: string) => ipcRenderer.invoke('read-file-content', filePath),
+  onCheckDirty: (handler: () => boolean) => {
+    ipcRenderer.on('check-dirty', (event) => {
+      event.returnValue = handler()
+    })
+  },
+  setDirty: (dirty: boolean) => {
+    ipcRenderer.send('set-dirty', dirty)
+  },
+  onSaveFileDirect: (handler: () => Promise<void>) => {
+    ipcRenderer.on('save-file-direct', async (event) => {
+      await handler()
+      event.sender.send('save-file-direct-done')
+    })
+  },
   onNewFile: (callback) => {
     const handler = () => callback()
     ipcRenderer.on('menu-new-file', handler)
@@ -53,8 +69,7 @@ const electronAPI: ElectronAPI = {
     const handler = () => callback()
     ipcRenderer.on('menu-save-as', handler)
     return () => ipcRenderer.removeListener('menu-save-as', handler)
-  },
-  removeAllListeners: (channel: string) => ipcRenderer.removeAllListeners(channel)
+  }
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)
